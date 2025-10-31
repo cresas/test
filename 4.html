@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enerji Biçimleri ↔ Günlük Hayat Örnekleri</title>
+  <style>
+    :root{
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      --bg: #0f172a;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --border-strong: #475569;
+      --panel: #1e293b;
+      --panel-hover: #334155;
+      --card-bg: #f8fafc;
+      --card-text: #1e293b;
+      --green: #10b981;
+      --green-glow: #34d399;
+      --rose: #f43f5e;
+      --rose-glow: #fb7185;
+      --accent: #06b6d4;
+      --accent-glow: #22d3ee;
+    }
+    
+    *{box-sizing:border-box;margin:0;padding:0}
+    
+    html,body{height:100%}
+    
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+      background:var(--bg);
+      background-image:var(--bg-gradient);
+      background-attachment:fixed;
+      color:var(--text);
+      line-height:1.6;
+    }
+    
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:16px 20px 120px;
+    }
+    
+    header.appbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:rgba(15,23,42,.85);
+      backdrop-filter:saturate(1.3) blur(12px);
+      border-bottom:1px solid var(--border);
+      border-radius:0 0 16px 16px;
+      padding:16px 20px;
+      margin-bottom:24px;
+      box-shadow:0 4px 20px rgba(0,0,0,.3);
+    }
+    
+    h1{
+      font-size:clamp(22px,3.5vw,32px);
+      margin:0 0 8px;
+      font-weight:800;
+      background:linear-gradient(120deg, var(--accent-glow), var(--green-glow));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    
+    p.lead{
+      margin:0;
+      color:var(--text-muted);
+      font-size:clamp(13px,2.2vw,15px);
+      line-height:1.5;
+    }
+    
+    .toolbar{
+      display:none;
+    }
+    
+    @media (min-width:768px){
+      .toolbar{
+        display:flex;
+        gap:12px;
+        justify-content:center;
+        margin-top:24px;
+      }
+    }
+    
+    .btn{
+      appearance:none;
+      border:2px solid var(--accent);
+      background:linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      color:#fff;
+      border-radius:12px;
+      padding:12px 24px;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(6,182,212,.3);
+      font-weight:600;
+      font-size:15px;
+      transition:all .2s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .btn::before{
+      content:'';
+      position:absolute;
+      top:0;
+      left:-100%;
+      width:100%;
+      height:100%;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+      transition:left .5s;
+    }
+    
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 20px rgba(6,182,212,.4);
+      border-color:var(--accent-glow);
+    }
+    
+    .btn:hover::before{
+      left:100%;
+    }
+    
+    .btn:active{
+      transform:translateY(0);
+    }
+    
+    @media (min-width:768px){
+      .btn{
+        padding:16px 32px;
+        font-size:16px;
+      }
+    }
+    
+    .score{
+      font-size:16px;
+      color:var(--text);
+      margin:8px 0 24px;
+      padding:12px 20px;
+      background:rgba(6,182,212,.1);
+      border:1px solid var(--accent);
+      border-radius:12px;
+      display:inline-block;
+    }
+    
+    .score b{
+      color:var(--accent-glow);
+      font-size:20px;
+    }
+
+    .zone{
+      border:2px solid var(--border-strong);
+      border-radius:16px;
+      background:var(--panel);
+      padding:16px;
+      min-height:8rem;
+      transition:all .2s ease;
+      box-shadow:0 2px 8px rgba(0,0,0,.2);
+    }
+    
+    .zone.pool{
+      border-style:dashed;
+      border-color:var(--accent);
+      background:rgba(6,182,212,.05);
+    }
+    
+    .zone:hover{
+      background:var(--panel-hover);
+      border-color:var(--accent);
+      transform:translateY(-2px);
+      box-shadow:0 4px 16px rgba(0,0,0,.3);
+    }
+    
+    .zone-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+      padding-bottom:8px;
+      border-bottom:1px solid var(--border);
+    }
+    
+    .zone-title{
+      font-weight:700;
+      font-size:15px;
+      color:var(--accent-glow);
+    }
+    
+    .zone-count{
+      font-size:13px;
+      color:var(--text-muted);
+      background:rgba(148,163,184,.1);
+      padding:2px 8px;
+      border-radius:8px;
+    }
+    
+    .cards{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .card{
+      user-select:none;
+      cursor:move;
+      border:2px solid #cbd5e1;
+      background:var(--card-bg);
+      color:var(--card-text);
+      border-radius:10px;
+      padding:10px 16px;
+      box-shadow:0 2px 6px rgba(0,0,0,.15);
+      font-size:14px;
+      font-weight:500;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:all .15s ease;
+    }
+    
+    .card:hover{
+      box-shadow:0 4px 12px rgba(0,0,0,.25);
+      transform:translateY(-2px);
+      border-color:#94a3b8;
+    }
+    
+    .card.correct{
+      border-color:var(--green);
+      background:linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      box-shadow:0 4px 12px rgba(16,185,129,.3);
+    }
+    
+    .card.wrong{
+      border-color:var(--rose);
+      background:linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+      box-shadow:0 4px 12px rgba(244,63,94,.3);
+    }
+    
+    .card.selected{
+      outline:3px solid var(--accent);
+      outline-offset:2px;
+      transform:scale(1.05);
+      box-shadow:0 0 20px rgba(6,182,212,.5);
+    }
+    
+    .tick{
+      font-size:14px;
+      font-weight:bold;
+    }
+
+    .grid{
+      display:grid;
+      gap:16px;
+      margin-bottom:32px;
+    }
+    
+    @media (min-width:640px){
+      .grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+    
+    @media (min-width:1024px){
+      .grid{
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
+
+    .fab{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:20;
+    }
+    
+    @media (min-width:768px){
+      .fab{
+        display:none;
+      }
+    }
+    
+    .desktop-controls{
+      display:none;
+    }
+    
+    @media (min-width:768px){
+      .desktop-controls{
+        display:flex;
+        justify-content:center;
+        gap:16px;
+        margin-top:32px;
+        flex-wrap:wrap;
+      }
+    }
+
+    .muted{
+      color:var(--text-muted);
+      font-size:13px;
+      margin-top:32px;
+      padding:16px;
+      background:rgba(148,163,184,.05);
+      border-radius:12px;
+      border-left:3px solid var(--accent);
+    }
+    
+    .section-title{
+      font-size:18px;
+      margin:0 0 12px;
+      font-weight:700;
+      color:var(--accent-glow);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="appbar">
+      <div>
+        <h1>⚡ Enerji Biçimleri ↔ Günlük Hayat Örnekleri</h1>
+        <p class="lead">Kartları uygun enerji kategorisine <b>sürükleyip bırakın</b>. İsterseniz bir karta tıklayıp ardından bir kategoriye tıklayarak da yerleştirebilirsiniz. Bazı olaylar birden fazla enerji dönüşümü içerebilir; en baskın olanı düşünün.</p>
+      </div>
+    </header>
+
+    <section class="score" id="scoreArea">Skor: <b>0</b> / 0</section>
+
+    <section style="margin-bottom:24px">
+      <h2 class="section-title">🎴 Kart Havuzu</h2>
+      <div class="zone pool" id="zone-pool" data-zone="pool" role="region" aria-label="Boş Kart Alanı">
+        <div class="zone-header"><span class="zone-title">Boş Kart Alanı</span><span class="zone-count" id="count-pool">0 kart</span></div>
+        <div class="cards" id="cards-pool"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">📚 Enerji Kategorileri</h2>
+      <div class="grid" id="grid-categories"></div>
+    </section>
+
+    <div class="desktop-controls">
+      <button class="btn" id="btnCheck">✓ Kontrol Et</button>
+      <button class="btn" id="btnReset">↻ Sıfırla</button>
+      <button class="btn" id="btnReveal">👁 Cevapları Göster</button>
+    </div>
+
+    <div class="fab">
+      <button class="btn" id="fabCheck" aria-label="Kontrol Et">✓</button>
+      <button class="btn" id="fabReset" aria-label="Sıfırla">↻</button>
+      <button class="btn" id="fabReveal" aria-label="Cevapları Göster">👁</button>
+    </div>
+
+    <footer class="muted">
+      <strong>💡 Not:</strong> Örneğin "mum alevi" kimyasal enerjinin ışık ve ısıya dönüşmesine örnektir. Bu etkinlikte kartlar baskın görülen enerji biçimine göre eşleştirilecek şekilde hazırlanmıştır.
+    </footer>
+  </div>
+
+  <script>
+  // --- Veri ---
+  const CATEGORIES = [
+    { id: "mekanik", title: "⚙️ Mekanik Enerji" },
+    { id: "isi", title: "🔥 Isı (Termal) Enerji" },
+    { id: "elektrik", title: "⚡ Elektrik Enerjisi" },
+    { id: "ses", title: "🔊 Ses Enerjisi" },
+    { id: "isik", title: "💡 Işık Enerjisi" },
+    { id: "kimyasal", title: "🧪 Kimyasal Enerji" },
+    { id: "nukleer", title: "☢️ Nükleer Enerji" },
+  ];
+
+  const EXAMPLES = [
+    { id: "ex1", text: "Zıplayan top", category: "mekanik", hint: "Potansiyel ↔ kinetik enerji dönüşümü" },
+    { id: "ex2", text: "Bisiklet pedalıyla hızlanma", category: "mekanik", hint: "Kas gücü hareket enerjisine dönüşür" },
+    { id: "ex3", text: "Rüzgâr türbini kanadının dönmesi", category: "mekanik", hint: "Havanın hareketi kanatları çevirir" },
+    { id: "ex4", text: "Kaynayan çaydanlık", category: "isi", hint: "Isı, suyun sıcaklığını artırır" },
+    { id: "ex5", text: "Sürtünerek ısınan eller", category: "isi", hint: "Sürtünme ısı üretir" },
+    { id: "ex6", text: "Fırında pişen kek", category: "isi", hint: "Fırındaki ısı yemeği pişirir" },
+    { id: "ex7", text: "Telefonu şarj etmek", category: "elektrik", hint: "Elektrik, bataryada depolanır" },
+    { id: "ex8", text: "Prizden çalışan bilgisayar", category: "elektrik", hint: "Cihazın çalışması için elektrik" },
+    { id: "ex9", text: "Elektrikli süpürge", category: "elektrik", hint: "Elektrik motoru çalıştırır" },
+    { id: "ex10", text: "Zil çalması", category: "ses", hint: "Titreşimler havada yayılan ses dalgalarıdır" },
+    { id: "ex11", text: "Hoparlörden müzik", category: "ses", hint: "Elektrik sinyali titreşime dönüşür" },
+    { id: "ex12", text: "Ambulans sireni", category: "ses", hint: "Yüksek frekanslı ses dalgaları" },
+    { id: "ex13", text: "El feneri ışığı", category: "isik", hint: "Elektrik → ışık" },
+    { id: "ex14", text: "Mum alevi", category: "isik", hint: "Kimyasal enerji → ışık ve ısı" },
+    { id: "ex15", text: "Güneş panellerine gelen güneş ışığı", category: "isik", hint: "Işığın enerjisi elektrik üretir" },
+    { id: "ex16", text: "Pillerin enerji depolaması", category: "kimyasal", hint: "Kimyasal bağlarda enerji" },
+    { id: "ex17", text: "Benzinle çalışan araba", category: "kimyasal", hint: "Yakıt yanınca enerji açığa çıkar" },
+    { id: "ex19", text: "Nükleer santralde enerji üretimi", category: "nukleer", hint: "Çekirdek tepkimeleri ısı ve elektrik üretir" },
+    { id: "ex20", text: "Güneşteki reaksiyonlar", category: "nukleer", hint: "Güneş enerjisinin kaynağı nükleer tepkimelerdir" },
+    { id: "ex21", text: "Radyoterapi cihazı", category: "nukleer", hint: "Radyoaktif kaynaklardan enerji" },
+  ];
+
+  // --- Yardımcılar ---
+  function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+  // --- Durum ---
+  let items = shuffle(EXAMPLES);
+  let placement = Object.fromEntries(EXAMPLES.map(e=>[e.id,'pool'])); // exId -> zoneId
+  let checked = false;
+  let selected = null; // click-to-place
+
+  // --- DOM referansları ---
+  const gridEl = document.getElementById('grid-categories');
+  const poolCardsEl = document.getElementById('cards-pool');
+  const poolZoneEl = document.getElementById('zone-pool');
+  const poolCountEl = document.getElementById('count-pool');
+  const scoreEl = document.getElementById('scoreArea');
+
+  // --- Kategori alanlarını oluştur ---
+  function buildCategoryGrid(){
+    gridEl.innerHTML = '';
+    for(const c of CATEGORIES){
+      const zone = document.createElement('div');
+      zone.className = 'zone';
+      zone.setAttribute('data-zone', c.id);
+      zone.setAttribute('role','region');
+      zone.setAttribute('aria-label', c.title);
+      zone.addEventListener('dragover', e=>e.preventDefault());
+      zone.addEventListener('drop', e=>handleDrop(e,c.id));
+      zone.addEventListener('click', ()=>handleClickZone(c.id));
+
+      const header = document.createElement('div');
+      header.className = 'zone-header';
+      const title = document.createElement('span');
+      title.className = 'zone-title';
+      title.textContent = c.title;
+      const count = document.createElement('span');
+      count.className = 'zone-count';
+      count.id = `count-${c.id}`;
+      header.appendChild(title); header.appendChild(count);
+
+      const cards = document.createElement('div');
+      cards.className = 'cards';
+      cards.id = `cards-${c.id}`;
+
+      zone.appendChild(header); zone.appendChild(cards);
+      gridEl.appendChild(zone);
+    }
+
+    // Pool olayları
+    poolZoneEl.addEventListener('dragover', e=>e.preventDefault());
+    poolZoneEl.addEventListener('drop', e=>handleDrop(e,'pool'));
+    poolZoneEl.addEventListener('click', ()=>handleClickZone('pool'));
+  }
+
+  // --- Kart şablonu ---
+  function createCard(it){
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.draggable = true;
+    el.title = it.hint || '';
+    el.textContent = it.text;
+
+    if(checked){
+      const good = placement[it.id] === it.category;
+      el.classList.add(good? 'correct':'wrong');
+      const tick = document.createElement('span');
+      tick.className = 'tick';
+      tick.textContent = good ? '✓' : '✗';
+      el.appendChild(tick);
+    }
+
+    if(selected === it.id){
+      el.classList.add('selected');
+      el.setAttribute('aria-pressed','true');
+    }
+
+    el.addEventListener('dragstart', ev=>{
+      ev.dataTransfer.setData('text/plain', it.id);
+      ev.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('click', ()=>handleClickItem(it.id));
+
+    return el;
+  }
+
+  // --- Yerleşimden görünüme ---
+  function render(){
+    // Grupla
+    const groups = { pool: [] };
+    for(const c of CATEGORIES) groups[c.id] = [];
+    for(const it of items){ groups[placement[it.id] || 'pool'].push(it); }
+
+    // Havuz
+    poolCardsEl.innerHTML = '';
+    for(const it of groups.pool){ poolCardsEl.appendChild(createCard(it)); }
+    poolCountEl.textContent = `${groups.pool.length} kart`;
+
+    // Kategoriler
+    for(const c of CATEGORIES){
+      const wrap = document.getElementById(`cards-${c.id}`);
+      const count = document.getElementById(`count-${c.id}`);
+      wrap.innerHTML = '';
+      for(const it of groups[c.id]) wrap.appendChild(createCard(it));
+      count.textContent = `${groups[c.id].length} kart`;
+    }
+
+    // Skor
+    const score = computeScore();
+    scoreEl.innerHTML = `Skor: <b>${score.correct}</b> / ${score.total}`;
+  }
+
+  function computeScore(){
+    let correct = 0; const total = EXAMPLES.length;
+    for(const it of EXAMPLES){ if(placement[it.id] === it.category) correct++; }
+    return {correct,total};
+  }
+
+  // --- Etkileşimler ---
+  function handleDrop(e, zoneId){
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    if(!id) return;
+    placement[id] = zoneId; selected = null; render();
+  }
+  function handleClickItem(id){ selected = (selected === id ? null : id); render(); }
+  function handleClickZone(zoneId){ if(!selected) return; placement[selected] = zoneId; selected = null; render(); }
+
+  function resetAll(){ items = shuffle(EXAMPLES); placement = Object.fromEntries(EXAMPLES.map(e=>[e.id,'pool'])); checked = false; selected = null; render(); }
+  function revealAll(){ for(const it of EXAMPLES) placement[it.id] = it.category; checked = true; selected = null; render(); }
+  function checkNow(){ checked = true; render(); }
+
+  // --- Olay bağlama ---
+  document.getElementById('btnCheck').addEventListener('click', checkNow);
+  document.getElementById('btnReset').addEventListener('click', resetAll);
+  document.getElementById('btnReveal').addEventListener('click', revealAll);
+  document.getElementById('fabCheck').addEventListener('click', checkNow);
+  document.getElementById('fabReset').addEventListener('click', resetAll);
+  document.getElementById('fabReveal').addEventListener('click', revealAll);
+
+  // --- Başlat ---
+  buildCategoryGrid();
+  render();
+  </script>
+</body>
+</html>
