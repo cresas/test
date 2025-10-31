@@ -444,6 +444,12 @@
     poolZoneEl.addEventListener('click', ()=>handleClickZone('pool'));
   }
 
+  // --- Touch Desteği İçin Değişkenler ---
+  let touchDraggedId = null;
+  let ghostElement = null;
+  let touchStartX = 0;
+  let touchStartY = 0;
+
   // --- Kart şablonu ---
   function createCard(it){
     const el = document.createElement('div');
@@ -472,7 +478,70 @@
     });
     el.addEventListener('click', ()=>handleClickItem(it.id));
 
+    // Touch olayları
+    el.addEventListener('touchstart', (e)=>handleTouchStart(e, it.id));
+    el.addEventListener('touchmove', handleTouchMove);
+    el.addEventListener('touchend', handleTouchEnd);
+
     return el;
+  }
+
+  // --- Touch Olayları ---
+  function handleTouchStart(e, id){
+    if(checked) return;
+    touchDraggedId = id;
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    
+    // Ghost element oluştur
+    ghostElement = e.currentTarget.cloneNode(true);
+    ghostElement.style.position = 'fixed';
+    ghostElement.style.pointerEvents = 'none';
+    ghostElement.style.zIndex = '1000';
+    ghostElement.style.opacity = '0.8';
+    ghostElement.style.transform = 'scale(1.1)';
+    ghostElement.style.left = touch.clientX - 50 + 'px';
+    ghostElement.style.top = touch.clientY - 20 + 'px';
+    document.body.appendChild(ghostElement);
+    
+    e.preventDefault();
+  }
+
+  function handleTouchMove(e){
+    if(!touchDraggedId || !ghostElement) return;
+    const touch = e.touches[0];
+    ghostElement.style.left = touch.clientX - 50 + 'px';
+    ghostElement.style.top = touch.clientY - 20 + 'px';
+    e.preventDefault();
+  }
+
+  function handleTouchEnd(e){
+    if(!touchDraggedId) return;
+    
+    const touch = e.changedTouches[0];
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // En yakın zone'u bul
+    let zone = dropTarget;
+    while(zone && !zone.hasAttribute('data-zone')){
+      zone = zone.parentElement;
+    }
+    
+    if(zone){
+      const zoneId = zone.getAttribute('data-zone');
+      placement[touchDraggedId] = zoneId;
+      selected = null;
+      render();
+    }
+    
+    // Temizle
+    if(ghostElement){
+      document.body.removeChild(ghostElement);
+      ghostElement = null;
+    }
+    touchDraggedId = null;
+    e.preventDefault();
   }
 
   // --- Yerleşimden görünüme ---
