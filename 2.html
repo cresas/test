@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Güç ve Enerji Simülasyonu</title>
+	
+    <style>
+        /* Genel Stil */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 30px;
+            width: 100%;
+            max-width: 1300px; 
+        }
+
+        .container {
+            flex: 2;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            min-width: 500px; 
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+            gap: 30px;
+        }
+
+        .inputs, .outputs {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        h2 {
+            font-size: 1.4em;
+            color: #007bff;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        /* Girdi Alanları */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #555; }
+        .input-group input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; box-sizing: border-box; }
+        .input-group input:disabled { background-color: #eee; }
+
+        #resetBtn { background-color: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.2s; margin-top: 10px; }
+        #resetBtn:hover { background-color: #c82333; }
+
+        .animation-controls { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .animation-controls button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.2s; }
+        #startAnimationBtn { background-color: #28a745; color: white; }
+        #startAnimationBtn:hover { background-color: #218838; }
+        #resetAnimationBtn { background-color: #6c757d; color: white; }
+        #resetAnimationBtn:hover { background-color: #5a6268; }
+
+        /* Çıktı Alanları */
+        .output-display { background-color: #f9f9f9; border: 1px dashed #ddd; border-radius: 5px; padding: 15px; }
+        .output-display p { margin: 10px 0; font-size: 1.1em; }
+        .output-display span { font-weight: 700; color: #0056b3; font-size: 1.2em; display: block; margin-top: 5px; }
+
+        #errorMessages { color: #dc3545; font-weight: bold; margin-top: 15px; min-height: 1.2em; }
+
+        /* Grafik Alanı */
+        .chart-section { width: 100%; padding: 0 30px 30px 30px; box-sizing: border-box; }
+        .chart-container { background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 5px; padding: 20px; }
+        .chart-title { text-align: center; font-size: 1.3em; font-weight: 600; margin-bottom: 20px; }
+        .chart { display: flex; justify-content: space-around; align-items: flex-end; height: 200px; border-bottom: 2px solid #ccc; padding: 0 10px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; width: 40%; }
+        .bar { width: 80%; max-width: 100px; background-color: #007bff; border-radius: 5px 5px 0 0; transition: height 0.3s ease-out; position: relative; }
+        .bar-group .bar { background-color: #007bff; }
+        .bar-group:last-child .bar { background-color: #28a745; }
+        .bar-label { margin-top: 8px; font-weight: 600; text-align: center; }
+        .key-message { text-align: center; font-size: 1.1em; font-weight: 600; color: #0056b3; margin-top: 20px; }
+
+        /* --- Animasyon Alanı --- */
+        .animation-area {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            min-width: 450px;
+            min-height: 650px;
+            position: relative;
+            overflow: hidden;
+        }
+        .animation-title { text-align: center; font-size: 1.5em; color: #007bff; margin-bottom: 20px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+
+        .building {
+            position: absolute;
+            bottom: 20px;
+            left: 150px;
+            width: 250px;
+            height: calc(100% - 100px);
+            background-color: #d8c2af;
+            border: 2px solid #a07a5e;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column-reverse;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .floor {
+            width: 100%;
+            height: 25%;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            position: relative;
+            box-sizing: border-box;
+        }
+        .floor:first-child { border-top: none; }
+
+        /* Merdiven (Görseldeki gibi düz, yatay basamaklı) */
+        .stairs {
+            position: absolute;
+            right: 5%;
+            bottom: 0px; 
+            width: 45px; 
+            height: 100%; 
+            background-color: transparent; 
+            z-index: 4; 
+
+            border-left: 5px solid #6d4c41; 
+            border-right: 5px solid #6d4c41; 
+            border-radius: 3px; 
+            box-sizing: border-box; 
+            
+            background-image: 
+                linear-gradient(to top, #6d4c41 5px, transparent 5px); 
+            background-size: 100% 40px; 
+            background-repeat: repeat-y; 
+            background-position: bottom; 
+        }
+        .stairs-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            color: #5a3e2c;
+            font-weight: bold;
+            font-size: 1.1em;
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+
+        /* Makara */
+        .pulley-system {
+            position: absolute;
+            top: 50px;
+            left: 70px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .pulley {
+            width: 30px;
+            height: 30px;
+            background-color: #888;
+            border-radius: 50%;
+            border: 2px solid #555;
+            position: relative;
+            overflow: hidden; 
+        }
+        .pulley-system > .pulley::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 5px;
+            background-color: #a07a5e;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            z-index: -1; 
+        }
+        .pulley::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #555;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        /* İpler */
+        .rope {
+            position: absolute;
+            width: 2px;
+            background-color: #8B4513;
+        }
+        #ropeToPerson {
+            left: 65px;
+            top: 80px; /* Sabit */
+        }
+        #ropeToTv {
+            left: 85px;
+            top: 80px; /* Sabit */
+        }
+
+        /* TV (Makara ile çekilen) */
+        .tv-pulley {
+            position: absolute;
+            left: 70px; 
+            bottom: 20px;
+            width: 40px;
+            height: 30px;
+            background-color: #333;
+            border: 2px solid #555;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        /* Karakter (Görsel ile) */
+        .person-stairs {
+            position: absolute;
+            right: 75px; 
+            bottom: 20px; 
+            
+            width: 40px; 
+            height: 57px; 
+
+            background-color: transparent; /* Yer tutucu rengi kaldırıldı */
+            border-radius: 0;
+            border: none; /* Yer tutucu kenarlık kaldırıldı */
+            z-index: 5;
+            transform: none; 
+        }
+        .person-stairs img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Yer tutucu kafa kaldırıldı */
+        .person-stairs::before, .person-stairs::after { 
+            display: none; 
+        }
+
+        /* Makara ipini çeken kişi (Duru) */
+        .pulley-person {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 30px;
+            height: 50px;
+            background-color: #e0ac4a; 
+            border-radius: 5px 5px 0 0;
+            z-index: 5;
+        }
+        .pulley-person::before { content: ''; width: 25px; height: 25px; background-color: #f0c29a; border-radius: 50%; position: absolute; top: -10px; border: 1px solid #c0927a; } 
+
+        /* Animasyon süresi göstergeleri */
+        .timer-display {
+            position: absolute;
+            top: 75px; /* Başlığın 1.5cm altına ayarlandı */
+            left: 400px;
+            font-weight: bold;
+            color: #007bff;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 20;
+        }
+        .timer-display span { display: block; margin-bottom: 3px; }
+
+        /* Yükseklik Oku (h) */
+        .height-arrow {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 2px;
+            background-color: #333;
+            z-index: 15;
+        }
+        .height-arrow::before, .height-arrow::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+        .height-arrow::before { top: -10px; border-bottom: 10px solid #333; }
+        .height-arrow::after { bottom: -10px; border-top: 10px solid #333; }
+        .h-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <div class="container">
+            <header>
+                <h1>GÜNLÜK HAYATTA GÜÇ VE ENERJİ KULLANIMI</h1>
+            </header>
+
+            <div class="content">
+                <div class="inputs">
+                    <h2>📊 Girdiler</h2>
+                    <div class="input-group">
+                        <label for="mass">TV Kütlesi (kg)</label>
+                        <input type="number" id="mass" min="0" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="height">Kat Yüksekliği (m)</label>
+                        <input type="number" id="height" min="0" step="0.5">
+                    </div>
+                    <div class="input-group">
+                        <label for="timePulley">Süre - Makara (Duru) (s) **Hesaplanan**</label>
+                        <input type="number" id="timePulley" min="0.1" step="1" disabled>
+                    </div>
+                    <div class="input-group">
+                        <label for="timeStairs">Süre - Merdiven (Alper) (s) **Hesaplanan**</label>
+                        <input type="number" id="timeStairs" min="0.1" step="1" disabled>
+                    </div>
+                    <div class="animation-controls">
+                        <button id="startAnimationBtn">Animasyonu Başlat</button>
+                        <button id="resetAnimationBtn">Animasyonu Sıfırla</button>
+                        <button id="resetBtn">Varsayılan Değerlere Sıfırla</button>
+                    </div>
+                    <div id="errorMessages"></div>
+                </div>
+
+                <div class="outputs">
+                    <h2>💡 Sonuçlar</h2>
+                    <div class="output-display">
+                        <p>
+                            Yapılan İş (İkisi için de aynı):
+                            <span id="workOutput">-- Joule</span>
+                        </p>
+                        <p>
+                            Güç - Makara (Duru):
+                            <span id="powerPulleyOutput">-- Watt</span>
+                        </p>
+                        <p>
+                            Güç - Merdiven (Alper):
+                            <span id="powerStairsOutput">-- Watt</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="chart-container">
+                    <h3 class="chart-title">Güç (W) Karşılaştırması</h3>
+                    <div class="chart">
+                        <div class="bar-group">
+                            <div id="pulleyBar" class="bar" style="height: 0%;"></div>
+                            <div class="bar-label">Makara (Duru)</div>
+                        </div>
+                        <div class="bar-group">
+                            <div id="stairsBar" class="bar" style="height: 0%;"></div>
+                            <div class="bar-label">Merdiven (Alper)</div>
+                        </div>
+                    </div>
+                    <p class="key-message" id="keyMessage">
+                        Aynı iş, daha kısa sürede → daha büyük güç.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="animation-area">
+            <h2 class="animation-title">TV Taşıma Animasyonu</h2>
+
+            <div class="timer-display">
+                <span>Makara: <span id="pulleyTimeDisplay">0s</span></span>
+                <span>Merdiven: <span id="stairsTimeDisplay">0s</span></span>
+            </div>
+
+            <div class="height-arrow" id="heightArrow">
+                <span class="h-label">h</span>
+            </div>
+
+            <div class="pulley-system">
+                <div id="pulley" class="pulley"></div>
+            </div>
+            <div id="ropeToPerson" class="rope"></div>
+            <div id="ropeToTv" class="rope"></div>
+            <div id="tvPulley" class="tv-pulley">TV</div>
+            <div id="pulleyPerson" class="pulley-person"></div>
+
+            <div class="building">
+                <div class="floor"></div>
+                <div class="floor"></div>
+                <div class="floor"></div>
+                <div class="floor"></div>
+                <div class="stairs">
+                    <span class="stairs-label">Merdiven</span>
+                </div>
+            </div>
+            
+            <div id="personStairs" class="person-stairs">
+                <img src="data:image/png;base64,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" alt="Merdiven çıkan kişi">
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // --- Değişkenler ve Sabitler ---
+        const g = 9.8;
+        
+        const defaultValues = {
+            mass: 40,
+            height: 12,
+            timePulleyDefault: 120, // Varsayılan süreler
+            timeStairsDefault: 300
+        };
+
+        let defaultWork = defaultValues.mass * g * defaultValues.height;
+        let defaultPowerPulley = defaultWork / defaultValues.timePulleyDefault;
+        let defaultPowerStairs = defaultWork / defaultValues.timeStairsDefault;
+
+        // --- DOM Elementleri (Simülasyon) ---
+        const massInput = document.getElementById('mass');
+        const heightInput = document.getElementById('height');
+        const timePulleyInput = document.getElementById('timePulley');
+        const timeStairsInput = document.getElementById('timeStairs');
+        const workOutput = document.getElementById('workOutput');
+        const powerPulleyOutput = document.getElementById('powerPulleyOutput');
+        const powerStairsOutput = document.getElementById('powerStairsOutput');
+        const pulleyBar = document.getElementById('pulleyBar');
+        const stairsBar = document.getElementById('stairsBar');
+        const resetBtn = document.getElementById('resetBtn');
+        const errorMessages = document.getElementById('errorMessages');
+
+        // --- DOM Elementleri (Animasyon) ---
+        const startAnimationBtn = document.getElementById('startAnimationBtn');
+        const resetAnimationBtn = document.getElementById('resetAnimationBtn');
+        const tvPulley = document.getElementById('tvPulley');
+        const personStairs = document.getElementById('personStairs');
+        const ropeToPerson = document.getElementById('ropeToPerson');
+        const ropeToTv = document.getElementById('ropeToTv');
+        const pulleyTimeDisplay = document.getElementById('pulleyTimeDisplay');
+        const stairsTimeDisplay = document.getElementById('stairsTimeDisplay');
+        const heightArrow = document.getElementById('heightArrow');
+        const building = document.querySelector('.building');
+        const pulleyElement = document.getElementById('pulley'); // Makara elementi
+        const stairsElement = document.querySelector('.stairs'); // Merdiven elementi
+
+        // --- Animasyon Durumu ---
+        let animationFrameId = null;
+        let animationStartTime = 0;
+        let animationRunning = false;
+        let targetHeightPx = 0;
+        let initialRopePersonHeight = 0;
+        let characterInitialBottom = 20; // Karakterin zeminden başlangıç yüksekliği
+
+        let currentAnimationTimePulley = defaultValues.timePulleyDefault;
+        let currentAnimationTimeStairs = defaultValues.timeStairsDefault;
+
+        // Makara dönüşü için değişken
+        let pulleyRotation = 0; 
+        const rotationSpeedFactor = 5; 
+
+
+        // --- Ana Fonksiyonlar ---
+        function calculate() {
+            const mass = parseFloat(massInput.value);
+            const height = parseFloat(heightInput.value);
+            
+            let errors = [];
+            if (isNaN(mass) || mass <= 0) errors.push("TV Kütlesi pozitif bir sayı olmalıdır.");
+            if (isNaN(height) || height <= 0) errors.push("Kat Yüksekliği pozitif bir sayı olmalıdır.");
+
+            if (errors.length > 0) {
+                errorMessages.textContent = errors.join(' ');
+                clearResults();
+                stopAnimation();
+                return;
+            } else {
+                errorMessages.textContent = '';
+            }
+
+            const work = mass * g * height;
+            
+            currentAnimationTimePulley = work / defaultPowerPulley;
+            currentAnimationTimeStairs = work / defaultPowerStairs;
+
+            // Süreler çok küçükse veya büyükse mantıklı sınırlar içinde tut
+            if (currentAnimationTimePulley < 10) currentAnimationTimePulley = 10;
+            if (currentAnimationTimeStairs < 10) currentAnimationTimeStairs = 10;
+            if (currentAnimationTimePulley > 600) currentAnimationTimePulley = 600; // Max 10 dakika
+            if (currentAnimationTimeStairs > 1200) currentAnimationTimeStairs = 1200; // Max 20 dakika
+
+            timePulleyInput.value = currentAnimationTimePulley.toFixed(1);
+            timeStairsInput.value = currentAnimationTimeStairs.toFixed(1);
+
+            const powerPulley = work / currentAnimationTimePulley;
+            const powerStairs = work / currentAnimationTimeStairs;
+
+            workOutput.textContent = `${work.toFixed(2)} Joule`;
+            powerPulleyOutput.textContent = `${powerPulley.toFixed(2)} Watt`;
+            powerStairsOutput.textContent = `${powerStairs.toFixed(2)} Watt`;
+
+            updateChart(powerPulley, powerStairs);
+        }
+
+        function updateChart(powerPulley, powerStairs) {
+            const maxPower = Math.max(powerPulley, powerStairs);
+            let pulleyHeightPercent = (maxPower > 0) ? (powerPulley / maxPower) * 100 : 0;
+            let stairsHeightPercent = (maxPower > 0) ? (powerStairs / maxPower) * 100 : 0;
+
+            pulleyBar.style.height = `${pulleyHeightPercent}%`;
+            stairsBar.style.height = `${stairsHeightPercent}%`;
+        }
+
+        function resetSimulation() {
+            massInput.value = defaultValues.mass;
+            heightInput.value = defaultValues.height;
+            
+            currentAnimationTimePulley = defaultValues.timePulleyDefault;
+            currentAnimationTimeStairs = defaultValues.timeStairsDefault;
+
+            calculate();
+            resetAnimation();
+        }
+
+        function clearResults() {
+            workOutput.textContent = "-- Joule";
+            powerPulleyOutput.textContent = "-- Watt";
+            powerStairsOutput.textContent = "-- Watt";
+            pulleyBar.style.height = '0%';
+            stairsBar.style.height = '0%';
+            timePulleyInput.value = '';
+            timeStairsInput.value = '';
+        }
+
+        // --- Animasyon Fonksiyonları ---
+
+        function setupAnimationDimensions() {
+            if (!building || !pulleyElement || !tvPulley || !personStairs || !stairsElement) return;
+
+            const buildingRect = building.getBoundingClientRect();
+            const pulleySystem = document.querySelector('.pulley-system');
+            
+            const pulleyRect = pulleyElement.getBoundingClientRect();
+            
+            // Hedef yükseklik (Binanın yüksekliği - alt ve üst boşluk)
+            targetHeightPx = buildingRect.height - 40; 
+            
+            // 'h' okunun yüksekliğini ayarla
+            heightArrow.style.height = `${targetHeightPx}px`;
+            heightArrow.style.top = `${building.offsetTop + (building.offsetHeight - targetHeightPx - 20)}px`;
+
+            const tvStartBottom = 20;
+
+            // Kişiye giden ipin başlangıç yüksekliği
+            const pulleyTopRelativeToArea = pulleySystem.offsetTop; 
+            const pulleyMidpointOffset = pulleyElement.offsetHeight / 2; 
+            const groundLevelRelativeToArea = building.offsetTop + building.offsetHeight;
+            initialRopePersonHeight = groundLevelRelativeToArea - (pulleyTopRelativeToArea + pulleyMidpointOffset) - 20; 
+            initialRopePersonHeight = Math.max(0, initialRopePersonHeight);
+            ropeToPerson.style.height = `${initialRopePersonHeight}px`;
+
+            // *** DÜZELTİLEN KISIM (SAĞ İP) ***
+            // TV ipinin başlangıç yüksekliği (basitçe hedef yükseklik kadar)
+            ropeToTv.style.height = `${targetHeightPx}px`;
+            // *** DÜZELTME: Çakışan 'bottom' ayarı kaldırıldı.
+
+            // TV'nin başlangıç pozisyonu
+            tvPulley.style.bottom = `${tvStartBottom}px`;
+
+            // Karakterin başlangıç pozisyonu
+            personStairs.style.bottom = `${characterInitialBottom}px`; 
+
+            // Makara dönüşünü sıfırla
+            pulleyRotation = 0;
+            pulleyElement.style.transform = `rotate(0deg)`;
+        }
+
+
+        function startAnimation() {
+            if (animationRunning) return;
+
+            calculate();
+            if (errorMessages.textContent) {
+                errorMessages.textContent = "Animasyonu başlatmak için tüm girdiler geçerli ve pozitif olmalıdır.";
+                return;
+            }
+
+            animationRunning = true;
+            animationStartTime = performance.now();
+            
+            setupAnimationDimensions(); 
+
+            animationFrameId = requestAnimationFrame(animate);
+            startAnimationBtn.disabled = true;
+        }
+
+        function stopAnimation() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            animationRunning = false;
+            startAnimationBtn.disabled = false;
+        }
+
+        function animate(currentTime) {
+            const elapsed = (currentTime - animationStartTime) / 1000; 
+
+            const timePulley = currentAnimationTimePulley;
+            const timeStairs = currentAnimationTimeStairs;
+
+            // Makara sistemi animasyonu
+            let pulleyProgress = Math.min(1, elapsed / timePulley);
+            let pulleyCurrentElevation = (pulleyProgress * targetHeightPx); 
+
+            tvPulley.style.bottom = `${characterInitialBottom + pulleyCurrentElevation}px`;
+            
+            // *** DÜZELTİLEN KISIM (SAĞ İP) ***
+            // TV ipinin yüksekliği (basitçe kalan yükseklik kadar)
+            ropeToTv.style.height = `${Math.max(0, targetHeightPx - pulleyCurrentElevation)}px`;
+            
+            // Kişinin ipinin yüksekliği
+            ropeToPerson.style.height = `${Math.max(0, initialRopePersonHeight + pulleyCurrentElevation)}px`;
+
+            // Makara dönüş animasyonu
+            pulleyRotation = pulleyCurrentElevation * rotationSpeedFactor;
+            pulleyElement.style.transform = `rotate(${pulleyRotation}deg)`;
+
+            // Merdiven animasyonu
+            let stairsProgress = Math.min(1, elapsed / timeStairs);
+            let stairsCurrentBottom = (stairsProgress * targetHeightPx);
+            personStairs.style.bottom = `${characterInitialBottom + stairsCurrentBottom}px`;
+
+            // Zamanlayıcıları güncelle
+            pulleyTimeDisplay.textContent = `${Math.min(elapsed, timePulley).toFixed(1)}s`;
+            stairsTimeDisplay.textContent = `${Math.min(elapsed, timeStairs).toFixed(1)}s`;
+
+            // Bitiş kontrolü
+            if (pulleyProgress < 1 || stairsProgress < 1) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                stopAnimation();
+                pulleyTimeDisplay.textContent = `${timePulley.toFixed(1)}s`;
+                stairsTimeDisplay.textContent = `${timeStairs.toFixed(1)}s`;
+            }
+        }
+
+        function resetAnimation() {
+            stopAnimation();
+
+            tvPulley.style.bottom = `${characterInitialBottom}px`;
+            personStairs.style.bottom = `${characterInitialBottom}px`;
+            
+            setupAnimationDimensions(); 
+            
+            pulleyTimeDisplay.textContent = '0s';
+            stairsTimeDisplay.textContent = '0s';
+        }
+
+        // --- Olay Dinleyicileri ---
+        massInput.addEventListener('input', calculate);
+        heightInput.addEventListener('input', calculate);
+
+        resetBtn.addEventListener('click', resetSimulation);
+        startAnimationBtn.addEventListener('click', startAnimation);
+        resetAnimationBtn.addEventListener('click', resetAnimation);
+
+        // --- Başlangıç ---
+        window.addEventListener('load', () => {
+             resetSimulation();
+        });
+
+    </script>
+</body>
+</html>
