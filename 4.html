@@ -44,7 +44,7 @@
     }
     
     header.appbar{
-      position:sticky;
+      position:relative;
       top:0;
       z-index:10;
       background:rgba(15,23,42,.85);
@@ -513,6 +513,20 @@
     const touch = e.touches[0];
     ghostElement.style.left = touch.clientX - 50 + 'px';
     ghostElement.style.top = touch.clientY - 20 + 'px';
+    
+    // Otomatik scroll
+    const scrollThreshold = 100;
+    const scrollSpeed = 10;
+    const windowHeight = window.innerHeight;
+    
+    if(touch.clientY < scrollThreshold){
+      // Yukarı scroll
+      window.scrollBy(0, -scrollSpeed);
+    } else if(touch.clientY > windowHeight - scrollThreshold){
+      // Aşağı scroll
+      window.scrollBy(0, scrollSpeed);
+    }
+    
     e.preventDefault();
   }
 
