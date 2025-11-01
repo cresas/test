@@ -44,7 +44,7 @@
     }
     
     header.appbar{
-      position:relative;
+      position:sticky;
       top:0;
       z-index:10;
       background:rgba(15,23,42,.85);
@@ -54,6 +54,18 @@
       padding:16px 20px;
       margin-bottom:24px;
       box-shadow:0 4px 20px rgba(0,0,0,.3);
+      transform:translateY(0);
+      transition:transform 0.3s ease;
+    }
+    
+    header.appbar.hidden{
+      transform:translateY(-100%);
+    }
+    
+    @media (min-width:768px){
+      header.appbar.hidden{
+        transform:translateY(0);
+      }
     }
     
     h1{
@@ -313,6 +325,99 @@
       font-weight:700;
       color:var(--accent-glow);
     }
+    
+    .modal-overlay{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      background:rgba(0,0,0,0.8);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      animation:fadeIn 0.3s ease;
+    }
+    
+    .modal-overlay.show{
+      display:flex;
+    }
+    
+    @keyframes fadeIn{
+      from{opacity:0;}
+      to{opacity:1;}
+    }
+    
+    @keyframes scaleIn{
+      from{transform:scale(0.8); opacity:0;}
+      to{transform:scale(1); opacity:1;}
+    }
+    
+    .modal-card{
+      background:linear-gradient(135deg, var(--panel) 0%, #334155 100%);
+      border:3px solid var(--green-glow);
+      border-radius:24px;
+      padding:48px 32px;
+      max-width:500px;
+      width:90%;
+      text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(52,211,153,0.2);
+      animation:scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .modal-icon{
+      font-size:80px;
+      margin-bottom:24px;
+      animation:bounce 0.6s ease;
+    }
+    
+    @keyframes bounce{
+      0%, 100%{transform:translateY(0);}
+      50%{transform:translateY(-20px);}
+    }
+    
+    .modal-title{
+      font-size:32px;
+      font-weight:800;
+      background:linear-gradient(120deg, var(--green-glow), var(--accent-glow));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      margin:0 0 16px;
+    }
+    
+    .modal-text{
+      font-size:18px;
+      color:var(--text);
+      margin:0 0 32px;
+      line-height:1.6;
+    }
+    
+    .modal-btn{
+      appearance:none;
+      border:2px solid var(--green);
+      background:linear-gradient(135deg, var(--green) 0%, #059669 100%);
+      color:#fff;
+      border-radius:12px;
+      padding:16px 48px;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(16,185,129,.4);
+      font-weight:700;
+      font-size:16px;
+      transition:all .2s ease;
+    }
+    
+    .modal-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 20px rgba(16,185,129,.6);
+      border-color:var(--green-glow);
+    }
+    
+    .modal-btn:active{
+      transform:translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -354,6 +459,19 @@
     <footer class="muted">
       <strong>💡 Not:</strong> Örneğin "mum alevi" kimyasal enerjinin ışık ve ısıya dönüşmesine örnektir. Bu etkinlikte kartlar baskın görülen enerji biçimine göre eşleştirilecek şekilde hazırlanmıştır.
     </footer>
+  </div>
+
+  <!-- Tebrikler Modal -->
+  <div class="modal-overlay" id="congratsModal">
+    <div class="modal-card">
+      <div class="modal-icon">🎉</div>
+      <h2 class="modal-title">Tebrikler!</h2>
+      <p class="modal-text">Tüm eşleşmeleri doğru yaptınız! 🌟</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="modal-btn" onclick="document.getElementById('congratsModal').classList.remove('show')">Kapat</button>
+        <button class="modal-btn" onclick="document.getElementById('congratsModal').classList.remove('show');resetAll();">🔄 Yeniden Başlat</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -399,6 +517,11 @@
   let placement = Object.fromEntries(EXAMPLES.map(e=>[e.id,'pool'])); // exId -> zoneId
   let checked = false;
   let selected = null; // click-to-place
+
+  // --- Ses efektleri ---
+  const soundTrue = new Audio('true.mp3');
+  const soundFalse = new Audio('false.mp3');
+  const soundConq = new Audio('conq.mp3');
 
   // --- DOM referansları ---
   const gridEl = document.getElementById('grid-categories');
@@ -600,9 +723,53 @@
   function handleClickItem(id){ selected = (selected === id ? null : id); render(); }
   function handleClickZone(zoneId){ if(!selected) return; placement[selected] = zoneId; selected = null; render(); }
 
-  function resetAll(){ items = shuffle(EXAMPLES); placement = Object.fromEntries(EXAMPLES.map(e=>[e.id,'pool'])); checked = false; selected = null; render(); }
-  function revealAll(){ for(const it of EXAMPLES) placement[it.id] = it.category; checked = true; selected = null; render(); }
-  function checkNow(){ checked = true; render(); }
+  function resetAll(){ 
+    items = shuffle(EXAMPLES); 
+    placement = Object.fromEntries(EXAMPLES.map(e=>[e.id,'pool'])); 
+    checked = false; 
+    selected = null; 
+    // Kontrol Et butonlarını tekrar göster
+    document.getElementById('btnCheck').style.display = '';
+    document.getElementById('fabCheck').style.display = '';
+    render(); 
+  }
+  function revealAll(){ 
+    for(const it of EXAMPLES) placement[it.id] = it.category; 
+    checked = true; 
+    selected = null; 
+    // Kontrol Et butonlarını gizle
+    document.getElementById('btnCheck').style.display = 'none';
+    document.getElementById('fabCheck').style.display = 'none';
+    render(); 
+  }
+  function checkNow(){ 
+    checked = true; 
+    render(); 
+    
+    // Ses ve mesaj kontrolü
+    const score = computeScore();
+    let correctCount = 0;
+    let wrongCount = 0;
+    
+    for(const it of EXAMPLES){
+      if(placement[it.id] === it.category) correctCount++;
+      else wrongCount++;
+    }
+    
+    if(correctCount > 0 && wrongCount > 0){
+      // Hem doğru hem yanlış var
+      soundFalse.play();
+    } else if(correctCount === EXAMPLES.length){
+      // Hepsi doğru!
+      soundConq.play();
+      setTimeout(()=>{
+        document.getElementById('congratsModal').classList.add('show');
+      }, 500);
+    } else if(wrongCount > 0){
+      // Sadece yanlışlar var
+      soundFalse.play();
+    }
+  }
 
   // --- Olay bağlama ---
   document.getElementById('btnCheck').addEventListener('click', checkNow);
@@ -611,6 +778,26 @@
   document.getElementById('fabCheck').addEventListener('click', checkNow);
   document.getElementById('fabReset').addEventListener('click', resetAll);
   document.getElementById('fabReveal').addEventListener('click', revealAll);
+
+  // --- Mobilde scroll yaparken appbar gizle ---
+  let lastScrollTop = 0;
+  const appbar = document.querySelector('header.appbar');
+  
+  window.addEventListener('scroll', ()=>{
+    if(window.innerWidth >= 768) return; // Sadece mobilde çalışsın
+    
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    if(scrollTop > lastScrollTop && scrollTop > 100){
+      // Aşağı scroll
+      appbar.classList.add('hidden');
+    } else {
+      // Yukarı scroll
+      appbar.classList.remove('hidden');
+    }
+    
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+  });
 
   // --- Başlat ---
   buildCategoryGrid();
